@@ -1,0 +1,19 @@
+Field,Group,Description
+AGVHDAY,Acute GVH:,Day
+AGVHGRD,Acute GVH:,"Overall grade (0-4,5,9)"
+AGVHGUT,Acute GVH:,"Gut           (0-4,5,9)"
+AGVHLVR,Acute GVH:,"Liver         (0-4,5,9)"
+AGVHSKN,Acute GVH:,"Skin          (0-4,5,9)"
+CELLTXL,Cells:,"Type(s) of cells infused at transplant (BM, PBSC, CORD)"
+CGVHDAY,Chronic GVH:,Day
+CGVHGRD,Chronic GVH:,"Grade  (Clinical, Subclinical,Abnormal,Normal)"
+DONAGE,Donor:,Donor age at transplant (not necessarily age at BM\PBSC Collection)
+DONREL,Donor:,"Donor relation specific (Sibling, Parent, Child...)"
+DONSEX,Donor:,Donor sex
+RACE,Demographic:,Patient race
+RELDAY,Relapse:,Day
+SEX,Demographic:,Patient sex
+STATUS,Diagnosis:,"Status at/pre-transplant (Remission,Relapse)"
+TBIDOSE,Transplant:,Total Body Irradiation dose
+TX,Transplant:,Number
+TXAGE,Transplant:,Age in years
