@@ -6,4 +6,6 @@ gvhd_sim.R contains implementations of gradient ascent algorithms for MLE with r
 
 fake_data_sim.R generates simulated data and runs the same models on them.
 
-NOTE: the implementation of gradient ascent in fake_data_sim.R is the most up-to-date one and should be used instead of gvhd_sim.R for now
+ent_mlr_cv.R has functions to fit entropic MLR via fast gradient ascent and to conduct k-fold cross validation.
+
+NOTE: the implementation of gradient ascent in ent_mlr_cv.R is the most up-to-date one and should be used.
