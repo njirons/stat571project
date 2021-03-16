@@ -1,5 +1,7 @@
 #### Run simulation studies for entropic MLR
 
+setwd("~/Documents/Classes/Winter 2021/stat 571/final/sim data")
+
 library(caret)
 library(glmnet)
 library(MASS)
@@ -8,7 +10,7 @@ library(MASS)
 
 # gradient ascent MLR + entropy regularization
 ent_mlr <- function(x,y,n,ns,m,J,d,epsilon,eps_ns=TRUE,prop = FALSE,
-                    cutoff = 10^(-5), iters = 10^5,
+                    cutoff = 10^(-5), iters = 5*10^3,
                     s=1,step="search",alpha = 0.5,gamma = 0.8){
   t <- 0
   beta <- matrix(0,nrow=d,ncol=J-1)
@@ -109,9 +111,9 @@ ent_mlr <- function(x,y,n,ns,m,J,d,epsilon,eps_ns=TRUE,prop = FALSE,
 
 # k-fold CV
 mlr_cv <- function(x,y,n,ns,m,J,d,epsilons, eps_ns=TRUE, prop = FALSE,
-                   cutoff = 10^(-5), iters = 10^5,
+                   cutoff = 10^(-5), iters = 5*10^3,
                    s=1,step="search",alpha = 0.5,gamma = 0.8, 
-                   folds = 2, reps = 100, loss="cMSPE"){
+                   folds = 5, reps = 1, loss="cMSPE"){
   num_eps <- length(epsilons)
   # losses <- c("cMSPE","pMSPE","TV","KL","ChiSq")
   # cv_error <- matrix(0,ncol=length(losses),nrow=num_eps)
@@ -120,10 +122,10 @@ mlr_cv <- function(x,y,n,ns,m,J,d,epsilons, eps_ns=TRUE, prop = FALSE,
   for(i in 1:reps){
     # split data into folds
     flds <- createFolds(1:m, k = folds, list = TRUE, returnTrain = FALSE)
-    print(paste0("rep: ",round(100*i/reps),"%"))
+    # print(paste0("rep: ",round(100*i/reps),"%"))
     for(k in 1:folds){
-      # print(paste0("rep: ",round(100*i/reps),
-      #              "%, fold: ",round(100*k/folds),"%"))
+      print(paste0("rep: ",round(100*i/reps),
+                   "%, fold: ",round(100*k/folds),"%"))
       
       # split data into training and test sets
       x_train <- x[-(flds[[k]]),]
@@ -153,27 +155,27 @@ mlr_cv <- function(x,y,n,ns,m,J,d,epsilons, eps_ns=TRUE, prop = FALSE,
           #mean squared prediction error on counts
           # pred <- sum((y_test-ns_test*phat)^2)/(sum(y_test^2)*reps*folds)
           # pred <- sum((y_test-ns_test*phat)^2)/(n*m*J*reps*folds)
-          pred <- mean((y_test-ns_test*phat)^2)/n
+          pred <- mean((y_test-ns_test*phat)^2)
           # cv_error[j,1] <- cv_error[j,1] + pred 
         }
         if(loss == "pMSPE"){
           #mean squared prediction error on probabilities
-          pred <- sum(((y_test/ns_test)-phat)^2)/(reps*folds)
+          pred <- mean(((y_test/ns_test)-phat)^2)
           # cv_error[j,2] <- cv_error[j,2] + pred 
         }
         if(loss=="TV"){
           # TV distance / MAE of probabilities
-          pred <- sum(abs((y_test/ns_test)-phat))/(reps*folds)
+          pred <- mean(abs((y_test/ns_test)-phat))
           # cv_error[j,3] <- cv_error[j,3] + pred 
         }
         if(loss=="KL"){
           # KL divergence/relative entropy
-          pred <- -sum((y_test/ns_test)*log(phat))/(reps*folds*100)
+          pred <- -mean((y_test/ns_test)*log(phat))
           # cv_error[j,4] <- cv_error[j,4] + pred 
         }
         if(loss == "ChiSq"){
           #chi squared prediction error on counts
-          pred <- mean((y_test-ns_test*phat)^2/(ns_test*phat))/(m*J*reps*folds)
+          pred <- mean((y_test-ns_test*phat)^2/(ns_test*phat))
           # cv_error[j,5] <- cv_error[j,5] + pred 
         }
         cv_error[j] <- cv_error[j] + pred
@@ -205,7 +207,7 @@ d <- 11; num_cov <- d-1;
 Js <- c(25,50,100) # number of response categories
 ms <- 2*Js # sample size/number of observations
 
-#for sim 2
+# for sim 2
 m2 <- 100 
 J2 <- 50 
 rhos <- c(0.1,0.5,0.9)   # correlation parameters
@@ -218,8 +220,8 @@ sep <- 0.1 #fraction of linearly separable response categories
 ## We use d = 11 covariates (including the intercept)
 ## 5 of which are continuous (normal) and 5 binary
 
-## We allow the number of observations to vary among m = 20, 50, 100
-## We also vary the number of response categories J = 20, 50, 100
+## We allow the number of observations to vary among m = 50, 100, 200
+## We also vary the number of response categories J = 25, 50, 100
 
 # generate data sets of each type
 x1 <- list(m1J1 = list(), m1J2 = list(), m1J3 = list(),
@@ -310,8 +312,8 @@ set.seed(2021)
 ## We use d = 11 covariates (including the intercept)
 ## 5 of which are continuous (normal) and 5 binary
 
-## We allow the number of observations to vary among m = 20, 50, 100
-## We also vary the number of response categories J = 20, 50, 100
+## We allow the number of observations to vary among m = 50, 100, 200
+## We also vary the number of response categories J = 25, 50, 100
 
 # generate data sets of each type
 x3 <- list(m1J1 = list(), m1J2 = list(), m1J3 = list(),
@@ -368,7 +370,7 @@ save(x3,file="x3_new.RData")
 save(y3,file="y3_new.RData")
 save(beta3,file="beta3_new.RData")
 
-
+rm(x2,y2,beta2,x3,y3,beta3)
 
 ##### run our method for each study
 cutoff <- 10^(-5)  # stopping criterion for gradient ascent
@@ -378,6 +380,23 @@ num_folds <- 5  # for k-fold CV
 
 ### simulation 1
 set.seed(2021)
+
+# fitted betahat and train/test splits
+betahat1 <- list(m1J1 = list(), m1J2 = list(), m1J3 = list(),
+           m2J1 = list(), m2J2 = list(), m2J3 = list(),
+           m3J1 = list(), m3J2 = list(), m3J3 = list())
+xtest1 <- list(m1J1 = list(), m1J2 = list(), m1J3 = list(),
+               m2J1 = list(), m2J2 = list(), m2J3 = list(),
+               m3J1 = list(), m3J2 = list(), m3J3 = list())
+xtrain1 <- list(m1J1 = list(), m1J2 = list(), m1J3 = list(),
+                m2J1 = list(), m2J2 = list(), m2J3 = list(),
+                m3J1 = list(), m3J2 = list(), m3J3 = list())
+ytest1 <- list(m1J1 = list(), m1J2 = list(), m1J3 = list(),
+               m2J1 = list(), m2J2 = list(), m2J3 = list(),
+               m3J1 = list(), m3J2 = list(), m3J3 = list())
+ytrain1 <- list(m1J1 = list(), m1J2 = list(), m1J3 = list(),
+                m2J1 = list(), m2J2 = list(), m2J3 = list(),
+                m3J1 = list(), m3J2 = list(), m3J3 = list())
 
 #### mse of betas
 mse1 <- list(m1J1 = rep(0,num_sets), m1J2 = rep(0,num_sets), m1J3 = rep(0,num_sets),
@@ -415,11 +434,15 @@ for(i in 1:length(ms)){
       ytrain <- y[trainid$Resample1,]
       ns_train <- rowSums(ytrain)
       n_train <- sum(ns_train)
+      xtrain1[[index]][[n]] <- xtrain
+      ytrain1[[index]][[n]] <- ytrain
       
       xtest <- x[-(trainid$Resample1),]
       ytest <- y[-(trainid$Resample1),]
       ns_test <- rowSums(ytest)
       n_test <- sum(ns_test)
+      xtest1[[index]][[n]] <- xtest
+      ytest1[[index]][[n]] <- ytest
       
       cv <- mlr_cv(x=xtrain,y=ytrain,n=n_train,ns=ns_train,m=m*0.8,J=J,d=d,
                    epsilons=epsilons, eps_ns = TRUE,
@@ -428,15 +451,16 @@ for(i in 1:length(ms)){
                    folds = num_folds, reps = 1, loss="cMSPE")
       
       betahat <- cv$beta
+      betahat1[[index]][[n]] <- betahat
       mse1[[index]][n] <- mean((betahat-beta)^2)
       mae1[[index]][n] <- mean(abs(betahat-beta))
       
-      numhat <- exp(xtest %*% beta)
+      numhat <- exp(xtest %*% betahat)
       denhat <- 1+rowSums(numhat)
       phat <- cbind(numhat/denhat,1/denhat)
       yhat <- ns_test * phat
-      mspe1[[index]][n] <- mean((ytest-yhat)^2)/(100*m*J)
-      mape1[[index]][n] <- mean(abs(ytest-yhat))/(100*m*J)
+      mspe1[[index]][n] <- mean((ytest-yhat)^2)
+      mape1[[index]][n] <- mean(abs(ytest-yhat))
     }
     print(paste0("Sim 1: ", round(100*index/(length(ms)*length(Js))), "% done."))
   }
@@ -445,9 +469,28 @@ save(mse1, file="mse1.RData")
 save(mae1, file="mae1.RData")
 save(mspe1, file="mspe1.RData")
 save(mape1, file="mape1.RData")
+save(betahat1, file="betahat1.RData")
+save(xtest1, file="xtest1.RData")
+save(xtrain1, file="xtrain1.RData")
+save(ytest1, file="ytest1.RData")
+save(ytrain1, file="ytrain1.RData")
+
+rm(mse1,mae1,mspe1,mape1,betahat1,xtest1,xtrain1,ytest1,ytrain1,
+   x1,y1,beta1)
 
 ### simulation 2
 set.seed(2021)
+
+load("x2_new.RData")
+load("y2_new.RData")
+load("beta2_new.RData")
+
+# fitted betahat and train/test splits
+betahat2 <- list(rho1 = list(), rho2 = list(), rho3 = list())
+xtest2 <- list(rho1 = list(), rho2 = list(), rho3 = list())
+xtrain2 <- list(rho1 = list(), rho2 = list(), rho3 = list())
+ytest2 <- list(rho1 = list(), rho2 = list(), rho3 = list())
+ytrain2 <- list(rho1 = list(), rho2 = list(), rho3 = list())
 
 #### mse of betas
 mse2 <- list(rho1 = rep(0,num_sets),rho2 = rep(0,num_sets),rho3 = rep(0,num_sets))
@@ -461,6 +504,8 @@ mae2 <- list(rho1 = rep(0,num_sets),rho2 = rep(0,num_sets),rho3 = rep(0,num_sets
 ### mean absolute prediction error on counts
 mape2 <- list(rho1 = rep(0,num_sets),rho2 = rep(0,num_sets),rho3 = rep(0,num_sets))
 
+m <- m2 
+J <- J2
 for(r in 1:length(rhos)){
   for(n in 1:num_sets){
     x <- x2[[r]][[n]]
@@ -473,11 +518,15 @@ for(r in 1:length(rhos)){
     ytrain <- y[trainid$Resample1,]
     ns_train <- rowSums(ytrain)
     n_train <- sum(ns_train)
+    xtrain2[[r]][[n]] <- xtrain
+    ytrain2[[r]][[n]] <- ytrain
       
     xtest <- x[-(trainid$Resample1),]
     ytest <- y[-(trainid$Resample1),]
     ns_test <- rowSums(ytest)
     n_test <- sum(ns_test)
+    xtest2[[r]][[n]] <- xtest
+    ytest2[[r]][[n]] <- ytest
       
     cv <- mlr_cv(x=xtrain,y=ytrain,n=n_train,ns=ns_train,m=m*0.8,J=J,d=d,
                  epsilons=epsilons, eps_ns = TRUE,
@@ -486,15 +535,16 @@ for(r in 1:length(rhos)){
                  folds = num_folds, reps = 1, loss="cMSPE")
       
     betahat <- cv$beta
+    betahat2[[r]][[n]] <- betahat
     mse2[[r]][n] <- mean((betahat-beta)^2)
     mae2[[r]][n] <- mean(abs(betahat-beta))
       
-    numhat <- exp(xtest %*% beta)
+    numhat <- exp(xtest %*% betahat)
     denhat <- 1+rowSums(numhat)
     phat <- cbind(numhat/denhat,1/denhat)
     yhat <- ns_test * phat
-    mspe2[[r]][n] <- mean((ytest-yhat)^2)/(100*m*J)
-    mape2[[r]][n] <- mean(abs(ytest-yhat))/(100*m*J)
+    mspe2[[r]][n] <- mean((ytest-yhat)^2)
+    mape2[[r]][n] <- mean(abs(ytest-yhat))
   }
   print(paste0("Sim 2: ", round(100*r/(length(rhos))), "% done."))
 }
@@ -503,9 +553,38 @@ save(mse2, file="mse2.RData")
 save(mae2, file="mae2.RData")
 save(mspe2, file="mspe2.RData")
 save(mape2, file="mape2.RData")
+save(betahat2, file="betahat2.RData")
+save(xtest2, file="xtest2.RData")
+save(xtrain2, file="xtrain2.RData")
+save(ytest2, file="ytest2.RData")
+save(ytrain2, file="ytrain2.RData")
+
+rm(mse2,mae2,mspe2,mape2,betahat2,xtest2,xtrain2,ytest2,ytrain2,
+   x2,y2,beta2)
 
 ### simulation 3
 set.seed(2021)
+
+load("x3_new.RData")
+load("y3_new.RData")
+load("beta3_new.RData")
+
+# fitted betahat and train/test splits
+betahat3 <- list(m1J1 = list(), m1J2 = list(), m1J3 = list(),
+                 m2J1 = list(), m2J2 = list(), m2J3 = list(),
+                 m3J1 = list(), m3J2 = list(), m3J3 = list())
+xtest3 <- list(m1J1 = list(), m1J2 = list(), m1J3 = list(),
+               m2J1 = list(), m2J2 = list(), m2J3 = list(),
+               m3J1 = list(), m3J2 = list(), m3J3 = list())
+xtrain3 <- list(m1J1 = list(), m1J2 = list(), m1J3 = list(),
+                m2J1 = list(), m2J2 = list(), m2J3 = list(),
+                m3J1 = list(), m3J2 = list(), m3J3 = list())
+ytest3 <- list(m1J1 = list(), m1J2 = list(), m1J3 = list(),
+               m2J1 = list(), m2J2 = list(), m2J3 = list(),
+               m3J1 = list(), m3J2 = list(), m3J3 = list())
+ytrain3 <- list(m1J1 = list(), m1J2 = list(), m1J3 = list(),
+                m2J1 = list(), m2J2 = list(), m2J3 = list(),
+                m3J1 = list(), m3J2 = list(), m3J3 = list())
 
 #### mse of betas
 mse3 <- list(m1J1 = rep(0,num_sets), m1J2 = rep(0,num_sets), m1J3 = rep(0,num_sets),
@@ -543,11 +622,15 @@ for(i in 1:length(ms)){
       ytrain <- y[trainid$Resample1,]
       ns_train <- rowSums(ytrain)
       n_train <- sum(ns_train)
+      xtrain3[[index]][[n]] <- xtrain
+      ytrain3[[index]][[n]] <- ytrain
       
       xtest <- x[-(trainid$Resample1),]
       ytest <- y[-(trainid$Resample1),]
       ns_test <- rowSums(ytest)
       n_test <- sum(ns_test)
+      xtest3[[index]][[n]] <- xtest
+      ytest3[[index]][[n]] <- ytest
       
       cv <- mlr_cv(x=xtrain,y=ytrain,n=n_train,ns=ns_train,m=m*0.8,J=J,d=d,
                    epsilons=epsilons, eps_ns = TRUE,
@@ -556,15 +639,16 @@ for(i in 1:length(ms)){
                    folds = num_folds, reps = 1, loss="cMSPE")
       
       betahat <- cv$beta
+      betahat3[[index]][[n]] <- betahat
       mse3[[index]][n] <- mean((betahat-beta)^2)
       mae3[[index]][n] <- mean(abs(betahat-beta))
       
-      numhat <- exp(xtest %*% beta)
+      numhat <- exp(xtest %*% betahat)
       denhat <- 1+rowSums(numhat)
       phat <- cbind(numhat/denhat,1/denhat)
       yhat <- ns_test * phat
-      mspe3[[index]][n] <- mean((ytest-yhat)^2)/(100*m*J)
-      mape3[[index]][n] <- mean(abs(ytest-yhat))/(100*m*J)
+      mspe3[[index]][n] <- mean((ytest-yhat)^2)
+      mape3[[index]][n] <- mean(abs(ytest-yhat))
     }
     print(paste0("Sim 3: ", round(100*index/(length(ms)*length(Js))), "% done."))
   }
@@ -573,4 +657,12 @@ save(mse3, file="mse3.RData")
 save(mae3, file="mae3.RData")
 save(mspe3, file="mspe3.RData")
 save(mape3, file="mape3.RData")
+save(betahat3, file="betahat3.RData")
+save(xtest3, file="xtest3.RData")
+save(xtrain3, file="xtrain3.RData")
+save(ytest3, file="ytest3.RData")
+save(ytrain3, file="ytrain3.RData")
+
+rm(mse3,mae3,mspe3,mape3,betahat3,xtest3,xtrain3,ytest3,ytrain3,
+   x3,y3,beta3)
 
