@@ -11,4 +11,5 @@ ent_mlr_cv.R has functions to fit entropic MLR via fast gradient ascent and to c
 run_ent_mlr_sim.R runs the simulation studies for entropic MLR.
 
 NOTE: the implementation of gradient ascent in run_ent_mlr_sim.R is the most up-to-date and should be used.
+
 NOTE: the code to generate simulation study data in run_ent_mlr_sim.R is the most up-to-date and should be used.
