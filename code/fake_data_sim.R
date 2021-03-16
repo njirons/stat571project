@@ -1,7 +1,7 @@
 ########################## just "futzing around"
-m <- 200; J <- 10;
-d <- 10
-ns <- rpois(n=m,lambda=(1:m)*10000)
+m <- 20; J <- 200;
+d <- 11
+ns <- rpois(n=m,lambda=(1:m)*100000)
 # ns <- rpois(n=m,lambda=100000)
 n <- sum(ns)
 
@@ -26,7 +26,7 @@ p0[,J] <- 1/den0
 
 p1 <- matrix(0,nrow=m/2,ncol=J)
 num1 <- exp(x1 %*% beta0)
-# num1[,1] <- 0
+num1[,1] <- 0
 den1 <- 1+rowSums(num1)
 p1[,1:(J-1)] <- num1/den1
 p1[,J] <- 1/den1
@@ -78,7 +78,7 @@ beta1 <- list(m1J1 = list(), m1J2 = list(), m1J3 = list(),
 
 for(i in 1:length(ms)){
   for(j in 1:length(Js)){
-    index <- length(ms)*(i-1)+j
+    index <- length(Js)*(i-1)+j
     m <- ms[i]
     J <- Js[j]
     for(n in 1:num_sets){
@@ -184,7 +184,7 @@ beta3 <- list(m1J1 = list(), m1J2 = list(), m1J3 = list(),
 
 for(i in 1:length(ms)){
   for(j in 1:length(Js)){
-    index <- length(ms)*(i-1)+j
+    index <- length(Js)*(i-1)+j
     m <- ms[i]
     J <- Js[j]
     for(n in 1:num_sets){
