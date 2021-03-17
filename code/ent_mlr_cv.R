@@ -204,11 +204,12 @@ mlr_cv <- function(x,y,n,ns,m,J,d,epsilons, eps_ns=TRUE, prop = FALSE,
 
 ## examples
 cv_c <- mlr_cv(x=x,y=y,n=n,ns=ns,m=m,J=J,d=d,
-               epsilons=exp(seq(-10,5,length.out=20)),
+               epsilons=exp(seq(-8,4,length.out=20)),
+               eps_ns=TRUE, prop=FALSE,
                # epsilons = 0,
-               cutoff = 10^(-5), iters = 5*10^3,
+               cutoff = 10^(-4), iters = 5*10^3,
                s=1,step="search",alpha = 0.5,gamma = 0.8,
-               folds = 5, reps = 5, loss="cMSPE")
+               folds = 5, reps = 1, loss="cMSPE")
 
 cv_c <- mlr_cv(x=x,y=y,n=n,ns=ns,m=m,J=J,d=d,
                epsilons=exp(seq(-1,4,length.out=10)), 
@@ -219,12 +220,12 @@ cv_c <- mlr_cv(x=x,y=y,n=n,ns=ns,m=m,J=J,d=d,
                folds = 2, reps = 1, loss="ChiSq")
 
 cv_p <- mlr_cv(x=x,y=y/ns,n=n,ns=ns,m=m,J=J,d=d,
-               epsilons=exp(seq(-10,5,length.out=20)),
+               epsilons=exp(seq(-10,5,length.out=50)),
                eps_ns=TRUE, prop=TRUE,
                # epsilons = 0,
                cutoff = 10^(-5), iters = 5*10^3,
                s=1,step="search",alpha = 0.5,gamma = 0.8,
-               folds = 5, reps = 5, loss="pMSPE")
+               folds = 10, reps = 10, loss="pMSPE")
 
 cv_e <- mlr_cv(x,y,n,ns,m,J,d,
                epsilons=exp(seq(-10,-6,length.out=10)),eps_ns=FALSE, prop=FALSE,
@@ -239,9 +240,8 @@ cv <- cv_e
 #plot CV errors
 plot(log(cv$epsilons),cv$cv_error,
      type="l",col=1, ylab="CV error", xlab="log(epsilon)")
-
-plot(cv$obj_vals)
 log(cv$epsilon)
+plot(cv$obj_vals)
 # plot(log(cv$epsilons),
 #      (cv$cv_error[,1]-min(cv$cv_error[,1]))/
 #        (max(cv$cv_error[,1])-min(cv$cv_error[,1])),
