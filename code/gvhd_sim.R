@@ -1,4 +1,4 @@
-setwd("~/Documents/Classes/Winter 2021/stat 571/final")
+setwd("~/Documents/Classes/Winter 2021/stat571project/GvHD data")
 library(readr)
 library(tidyr)
 library(dplyr)
@@ -9,25 +9,29 @@ library(foreign)
 library(stats4)
 
 covariates <- read_csv("GvHD_Covariates_571.csv")
-# covariates <- na.omit(covariates)
-# View(covariates)
-# glimpse(covariates)
+covariates <- covariates[order(covariates$sub_ID),]
+
+# biomarkers <- read_csv("GvHD_Biomarkers_571.csv")
+# View(biomarkers)
 
 taxon <- read.csv("GvHD_Microbiome_Data_571.csv")
-
-# taxon %>% group_by(patientID) %>% filter(sample_day==0)
-# taxon <- taxon[,-(1:5)]
-
+# names(taxon)[1:10]
+# taxon[1:5,1:5]
+taxon <- taxon[order(taxon$patientID),]
 taxon <- taxon %>% group_by(patientID) %>% 
   summarise(across(names(taxon)[-(1:5)], sum))
-taxon <- taxon[,-1]
 
-# m <- 50
-m <- 138
-J <- 100
-x <- na.omit(covariates %>% select(sex, agvhgrd,agvhskn,agvhlvr,agvhgut,status,
-                                   donsex,txage,donage,race,donrel))
-subjects <- sample(1:dim(x)[1],size=m, replace=FALSE)
+covariates <- covariates %>% filter(is.element(sub_ID,taxon$patientID))
+
+sum(covariates$sub_ID != taxon$patientID)
+# dim(covariates)
+# dim(taxon)
+# sum(is.element(taxon$patientID,covariates$sub_ID))
+
+x <- na.omit(covariates %>% 
+               dplyr::select(sub_ID,txage,race,sex,donrel,donsex,
+                             donage,status,celltxl, # agvhgrd,
+                             agvhskn,agvhlvr,agvhgut, cgvhgrd))
 
 x$status <- x$status == "Remission"
 x$donage <- x$donage - mean(x$donage)
@@ -36,16 +40,66 @@ x$sex <- x$sex == "Female"
 x$donsex <- x$donsex == "Female"
 x$race <- x$race == "Caucasian"
 x$donrel <- x$donrel == "Not Related"
-# x$agvhgrd[is.na(x$agvhgrd)] <- 0
-# x[is.na(x)] <- 0
+x$celltxl <- x$celltxl == "PBSC"
+x$cgvhgrd <- x$cgvhgrd == "Clinical"
 x$intercept <- 1
-d <- ncol(x)
 
-x <- x[subjects,]
-taxa <- taxon[subjects,1:J]
+cor(x$agvhskn,x$agvhlvr)
+cor(x$agvhskn,x$agvhgut)
+cor(x$agvhgut,x$agvhlvr)
 
+# cor(x$agvhgrd,x$agvhlvr)
+# cor(x$agvhgrd,x$agvhskn)
+# cor(x$agvhgrd,x$agvhgut)
+
+y <- as.matrix(taxon[is.element(taxon$patientID,x$sub_ID),])
 x <- as.matrix(x)
-y <- as.matrix(taxa)
+sum(y[,1] != x[,1])
+x <- x[,-1]
+
+# final data set
+y <- y[,-1]
+x <- x[,order(ncol(x):1)]
+d <- ncol(x)
+m <- nrow(x)
+J <- 100  # we will randomly choose 100 taxa
+
+save(x,file="x.RData")
+save(y,file="y_original.RData")
+
+# generate data subsets and train/test splits
+reps <- 50
+ys <- list()
+ytrain <- list()
+xtrain <- list()
+ytest <- list()
+xtest <- list()
+for(i in 1:reps){
+  taxa <- sample(1:ncol(y),size=J,replace=FALSE)
+  y_tmp <- y[,taxa]
+  ys[[i]] <- y_tmp
+  
+  train.id <- sample(1:m,size = 0.8*m,replace=FALSE)
+  test.id <- -(train.id)
+  
+  ytrain[[i]] <- y_tmp[train.id,]
+  ytest[[i]] <- y_tmp[test.id,]
+  
+  xtrain[[i]] <- x[train.id,]
+  xtest[[i]] <- x[test.id,]
+}
+
+save(ys,file="ys.RData")
+save(ytrain,file="ytrain.RData")
+save(ytest,file="ytest.RData")
+save(xtrain,file="xtrain.RData")
+save(xtest,file="xtest.RData")
+
+dim(ys[[50]])
+dim(ytrain[[50]])
+dim(ytest[[50]])
+dim(xtrain[[50]])
+dim(xtest[[50]])
 
 ns <- rowSums(y)
 n <- sum(ns)
