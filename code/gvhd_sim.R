@@ -68,6 +68,7 @@ save(x,file="x.RData")
 save(y,file="y_original.RData")
 
 # generate data subsets and train/test splits
+set.seed(2021)
 reps <- 50
 ys <- list()
 ytrain <- list()
