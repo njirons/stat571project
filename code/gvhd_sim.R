@@ -62,7 +62,7 @@ y <- y[,-1]
 x <- x[,order(ncol(x):1)]
 d <- ncol(x)
 m <- nrow(x)
-J <- 100  # we will randomly choose 100 taxa
+J <- 50  # we will randomly choose 100 taxa
 
 save(x,file="x.RData")
 save(y,file="y_original.RData")
@@ -101,6 +101,17 @@ dim(ytrain[[50]])
 dim(ytest[[50]])
 dim(xtrain[[50]])
 dim(xtest[[50]])
+
+
+###############################
+
+
+
+
+
+
+
+
 
 ns <- rowSums(y)
 n <- sum(ns)
